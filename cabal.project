@@ -4,3 +4,4 @@ packages:
 source-repository-package
     type: git
     location: https://github.com/pdobsan/githash
+    tag: d006ec12c4a241b825fc76bd6baec549ff23d4fe
