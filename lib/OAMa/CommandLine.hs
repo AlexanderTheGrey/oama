@@ -20,21 +20,24 @@ import Options.Applicative
 import Paths_oama (version)
 import Text.Printf
 
-gi :: GitInfo
-gi = $$tGitInfoCwd
+giE :: Either String GitInfo
+giE = $$tGitInfoCwdTry
 
-_GIT_STATUS_INFO :: String
-_GIT_STATUS_INFO =
-  printf
-    "%s %04d.%s%s"
-    ( TF.formatTime
-        TF.defaultTimeLocale
-        "%Y-%m-%d"
-        (TCP.posixSecondsToUTCTime (fromIntegral (giCommitTime gi)))
-    )
-    (giCommitCount gi)
-    (take 8 (giHash gi))
-    (if giDirty gi then " dirty" else "")
+gitStatusInfo :: Maybe String
+gitStatusInfo =
+  either (const Nothing) (Just . fmt) giE
+  where
+    fmt gi =
+      printf
+        "%s %04d.%s%s"
+        ( TF.formatTime
+            TF.defaultTimeLocale
+            "%Y-%m-%d"
+            (TCP.posixSecondsToUTCTime (fromIntegral (giCommitTime gi)))
+        )
+        (giCommitCount gi)
+        (take 8 (giHash gi))
+        (if giDirty gi then " dirty" else "")
 
 data Opts = Opts
   { optConfig :: !String,
@@ -65,7 +68,7 @@ optsParser =
     )
 
 versionInfo :: String
-versionInfo = showVersion version <> printf " - %s" _GIT_STATUS_INFO
+versionInfo = showVersion version <> maybe "" (printf " - %s") gitStatusInfo
 
 versionOption :: Parser (a -> a)
 versionOption = do
